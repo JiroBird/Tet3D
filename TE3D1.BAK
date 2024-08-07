@@ -1,0 +1,515 @@
+uses Crt, Graph, Dos, Driver;
+type
+  cubik3d=record
+    x,y,z:integer;
+    act:boolean end;
+  obj=array [1..3,1..3,1..3] of cubik3d;
+const
+  Xcentr=320;
+  Ycentr=240;
+  dCube=80;
+  UpKey=1;
+  DownKey=2;
+  LeftKey=3;
+  RightKey=4;
+  MaxFigure=4;
+  pizdec=200;
+var
+  ups,grD,grM,Xmouse,Ymouse,Current,ppp: integer;
+  h,m,s,s100,h1,m1,s1,s101,l,
+  dSec:word;
+  iii,Score:integer;
+  cub:cubik3d;
+  Event:TEvent;
+  ExitOk:boolean;
+  GameBar: array [1..5,1..5,1..10] of boolean;
+  arrObj: array [1..5] of obj;
+  Fake,Fake2:obj;
+procedure drPoleLn;
+  var
+    i,cof: integer;
+  begin
+    cof:=10;
+    SetColor(Blue);
+    Rectangle(220,140,420,340);
+    SetColor(Red);
+    for i:= 0 to 5 do begin
+      Line(120+i*80,40,220+i*40,140);
+      Line(120+i*80,440,220+i*40,340);
+      Line(120,40+i*80,220,140+i*40);
+      Line(520,40+i*80,420,140+i*40) end;
+    for i:=1 to 9 do
+      Rectangle(120+i*cof,40+i*cof,520-i*cof,440-i*cof);
+    SetColor(Blue);
+    for i:=1 to 4 do begin
+      Line (220+i*40,140,220+i*40,340);
+      Line (220,140+i*40,420,140+i*40) end;
+    SetColor(Green);
+    Rectangle(120,40,520,440) end;
+procedure Cube3d (x,y,z,Color: integer);
+  var
+    dCubeSm,dCubeLr,dX,dY: integer;
+    Te:String;
+    begin
+      dCubeSm:=(dCube-z*4) div 2;
+      dcubeLr:=(dCube-(z-1)*4) div 2;
+      dX:=x-3;
+      dY:=y-3;
+      SetColor(Color);
+      Rectangle(Xcentr-dCubeSm+2*dCubeSM*dX,Ycentr-dCubeSm+2*dCubeSM*dY,
+                    Xcentr+dCubeSm+2*dCubeSM*dX,Ycentr+dCubeSm+2*dCubeSM*dY);
+      Line(Xcentr-dCubeSm+2*dCubeSM*dX,Ycentr-dCubeSm+2*dCubeSM*dY,
+                     Xcentr-dCubeLr+2*dCubeLr*dX,Ycentr-dCubeLr+2*dCubeLr*dY);
+      Line(Xcentr+dCubeSm+2*dCubeSM*dX,Ycentr+dCubeSm+2*dCubeSM*dY,
+                     Xcentr+dCubeLr+2*dCubeLr*dX,Ycentr+dCubeLr+2*dCubeLr*dY);
+      Line(Xcentr-dCubeSm+2*dCubeSM*(dX+1),Ycentr-dCubeSm+2*dCubeSM*dY,
+                     Xcentr-dCubeLr+2*dCubeLr*(dX+1),Ycentr-dCubeLr+2*dCubeLr*dY);
+      Line(Xcentr-dCubeSm+2*dCubeSM*dX,Ycentr-dCubeSm+2*dCubeSM*(dY+1),
+                     Xcentr-dCubeLr+2*dCubeLr*dX,Ycentr-dCubeLr+2*dCubeLr*(dY+1));
+      Rectangle(Xcentr-dCubeLr+2*dCubeLr*dX,Ycentr-dCubeLr+2*dCubeLr*dY,
+                    Xcentr+dCubeLr+2*dCubeLr*dX,Ycentr+dCubeLr+2*dCubeLr*dY);
+      Str(Score,Te);
+      SetTextStyle(GothicFont,HorizDir,4);
+      OutTextXY(560,50,Te); end;
+procedure drStatick(x,y,z:integer);
+  var
+    dCubeSm,dCubeLr,dX,dY,
+    Cl: integer;
+    begin
+      dCubeSm:=(dCube-z*4) div 2;
+      dcubeLr:=(dCube-(z-1)*4) div 2;
+      dX:=x-3;
+      dY:=y-3;
+      Case z of
+        10,5: begin
+          SetFillStyle(SolidFill,Magenta);
+          SetColor(Red);
+          Cl:=Red end;
+        9,4: begin
+          SetFillStyle(SolidFill,Blue);
+          SetColor(Cyan);
+          Cl:=Cyan; end;
+        8,3: begin
+          SetFillStyle(SolidFill,Yellow);
+          SetColor(White);
+          Cl:=White end;
+        7,2: begin
+          SetFillStyle(SolidFill,LightRed);
+          SetColor(Magenta);
+          Cl:=Magenta end;
+        6,1: begin
+          SetFillStyle(SolidFill,Green);
+          SetColor(LightGreen) end end;
+      Rectangle(Xcentr-dCubeSm+2*dCubeSM*dX,Ycentr-dCubeSm+2*dCubeSM*dY,
+                    Xcentr+dCubeSm+2*dCubeSM*dX,Ycentr+dCubeSm+2*dCubeSM*dY);
+      Line(Xcentr-dCubeSm+2*dCubeSM*dX,Ycentr-dCubeSm+2*dCubeSM*dY,
+                     Xcentr-dCubeLr+2*dCubeLr*dX,Ycentr-dCubeLr+2*dCubeLr*dY);
+      Line(Xcentr+dCubeSm+2*dCubeSM*dX,Ycentr+dCubeSm+2*dCubeSM*dY,
+                     Xcentr+dCubeLr+2*dCubeLr*dX,Ycentr+dCubeLr+2*dCubeLr*dY);
+      Line(Xcentr-dCubeSm+2*dCubeSM*(dX+1),Ycentr-dCubeSm+2*dCubeSM*dY,
+                     Xcentr-dCubeLr+2*dCubeLr*(dX+1),Ycentr-dCubeLr+2*dCubeLr*dY);
+      Line(Xcentr-dCubeSm+2*dCubeSM*dX,Ycentr-dCubeSm+2*dCubeSM*(dY+1),
+                     Xcentr-dCubeLr+2*dCubeLr*dX,Ycentr-dCubeLr+2*dCubeLr*(dY+1));
+      Rectangle(Xcentr-dCubeLr+2*dCubeLr*dX,Ycentr-dCubeLr+2*dCubeLr*dY,
+                      Xcentr+dCubeLr+2*dCubeLr*dX,Ycentr+dCubeLr+2*dCubeLr*dY) end;
+procedure drStatickCube(x,y,z: integer);
+  var
+    dCubeSm,dCubeLr,dX,dY,
+    Cl: integer;
+    begin
+      dCubeSm:=(dCube-z*4) div 2;
+      dcubeLr:=(dCube-(z-1)*4) div 2;
+      dX:=x-3;
+      dY:=y-3;
+      Case z of
+        10,5: begin
+          SetFillStyle(SolidFill,Magenta);
+          SetColor(Red);
+          Cl:=Red end;
+        9,4: begin
+          SetFillStyle(SolidFill,Blue);
+          SetColor(Cyan);
+          Cl:=Cyan; end;
+        8,3: begin
+          SetFillStyle(SolidFill,Yellow);
+          SetColor(White);
+          Cl:=White end;
+        7,2: begin
+          SetFillStyle(SolidFill,LightRed);
+          SetColor(Magenta);
+          Cl:=Magenta end;
+        6,1: begin
+          SetFillStyle(SolidFill,Green);
+          SetColor(LightGreen) end end;
+      Bar(Xcentr-dCubeLr+2*dCubeLr*dX,Ycentr-dCubeLr+2*dCubeLr*dY,
+                      Xcentr+dCubeLr+2*dCubeLr*dX,Ycentr+dCubeLr+2*dCubeLr*dY);
+      Rectangle(Xcentr-dCubeLr+2*dCubeLr*dX,Ycentr-dCubeLr+2*dCubeLr*dY,
+                      Xcentr+dCubeLr+2*dCubeLr*dX,Ycentr+dCubeLr+2*dCubeLr*dY) end;
+procedure drStatickGame;
+  var
+    x,y,z:integer;
+    begin
+      SetFillStyle(SolidFill,Black);
+      bar(0,0,640,480);
+      drPoleLn;
+      for z:=10 downto 1 do begin
+        for x:=1 to 5 do
+          for y:=1 to 5 do
+            if GameBar[x,y,z] then
+              drStatick(x,y,z);
+        for x:=1 to 5 do
+          for y:=1 to 5 do
+            if GameBar[x,y,z] then
+              drStatickCube(x,y,z) end end;
+procedure InsertArr;
+  begin
+                {линия}
+    arrObj[1][1,2,2].act:=true;
+    arrObj[1][2,2,2].act:=true;
+    arrObj[1][3,2,2].act:=true;
+              {Г-образная}
+    arrObj[2][2,2,2].act:=true;
+    arrObj[2][1,2,2].act:=true;
+    arrObj[2][3,2,2].act:=true;
+    arrObj[2][1,1,2].act:=true;
+             { JL-образная  }
+    arrObj[3][2,2,2].act:=true;
+    arrObj[3][1,2,2].act:=true;
+    arrObj[3][3,2,2].act:=true;
+    arrObj[3][2,1,2].act:=true;
+                 {стул}
+    arrObj[4][2,2,2].act:=true;
+    arrObj[4][3,2,2].act:=true;
+    arrObj[4][1,1,2].act:=true;
+    arrObj[4][2,1,2].act:=true end;
+procedure InsertFake(x,y,z:integer);
+  var rrr:integer;
+    begin
+      rrr:=Random(ppp)+1;
+      if rrr>MaxFigure then rrr:=MaxFigure;
+      Fake:=arrObj[rrr];
+
+      Fake[1,1,1].x:=x-1;   Fake[2,1,1].x:=x;   Fake[3,1,1].x:=x+1;
+      Fake[1,1,1].y:=y-1;   Fake[2,1,1].y:=y-1; Fake[3,1,1].y:=y-1;
+      Fake[1,1,1].z:=z-1;   Fake[2,1,1].z:=z-1; Fake[3,1,1].z:=z-1;
+
+      Fake[1,2,1].x:=x-1;   Fake[2,2,1].x:=x;   Fake[3,2,1].x:=x+1;
+      Fake[1,2,1].y:=y;     Fake[2,2,1].y:=y;   Fake[3,2,1].y:=y;
+      Fake[1,2,1].z:=z-1;   Fake[2,2,1].z:=z-1; Fake[3,2,1].z:=z-1;
+
+      Fake[1,3,1].x:=x-1;   Fake[2,3,1].x:=x;   Fake[3,3,1].x:=x+1;
+      Fake[1,3,1].y:=y+1;   Fake[2,3,1].y:=y+1; Fake[3,3,1].y:=y+1;
+      Fake[1,3,1].z:=z-1;   Fake[2,3,1].z:=z-1; Fake[3,3,1].z:=z-1;
+
+      Fake[1,1,2].x:=x-1;   Fake[2,1,2].x:=x;   Fake[3,1,2].x:=x+1;
+      Fake[1,1,2].y:=y-1;   Fake[2,1,2].y:=y-1; Fake[3,1,2].y:=y-1;
+      Fake[1,1,2].z:=z;     Fake[2,1,2].z:=z;   Fake[3,1,2].z:=z;
+
+      Fake[1,2,2].x:=x-1;   Fake[2,2,2].x:=x;   Fake[3,2,2].x:=x+1;
+      Fake[1,2,2].y:=y;     Fake[2,2,2].y:=y;   Fake[3,2,2].y:=y;
+      Fake[1,2,2].z:=z;     Fake[2,2,2].z:=z;   Fake[3,2,2].z:=z;
+
+      Fake[1,3,2].x:=x-1;   Fake[2,3,2].x:=x;   Fake[3,3,2].x:=x+1;
+      Fake[1,3,2].y:=y+1;   Fake[2,3,2].y:=y+1; Fake[3,3,2].y:=y+1;
+      Fake[1,3,2].z:=z;     Fake[2,3,2].z:=z;   Fake[3,3,2].z:=z;
+
+      Fake[1,1,3].x:=x-1;   Fake[2,1,3].x:=x;   Fake[3,1,3].x:=x+1;
+      Fake[1,1,3].y:=y-1;   Fake[2,1,3].y:=y-1; Fake[3,1,3].y:=y-1;
+      Fake[1,1,3].z:=z+1;   Fake[2,1,3].z:=z+1; Fake[3,1,3].z:=z+1;
+
+      Fake[1,2,3].x:=x-1;   Fake[2,2,3].x:=x;   Fake[3,2,3].x:=x+1;
+      Fake[1,2,3].y:=y;     Fake[2,2,3].y:=y;   Fake[3,2,3].y:=y;
+      Fake[1,2,3].z:=z+1;   Fake[2,2,3].z:=z+1; Fake[3,2,3].z:=z+1;
+
+      Fake[1,3,3].x:=x-1;   Fake[2,3,3].x:=x;   Fake[3,3,3].x:=x+1;
+      Fake[1,3,3].y:=y+1;   Fake[2,3,3].y:=y+1; Fake[3,3,3].y:=y+1;
+      Fake[1,3,3].z:=z+1;   Fake[2,3,3].z:=z+1; Fake[3,3,3].z:=z+1 end;
+procedure drFake;
+  var
+    x,y,z: integer;
+    begin
+      for x:=1 to 3 do
+        for y:=1 to 3 do
+          for z:=1 to 3 do
+            if Fake[x,y,z].act then begin
+              Cube3d(Fake[x,y,z].x,Fake[x,y,z].y,Fake[x,y,z].z,White);
+               end end;
+Function TestFake:boolean;
+  var x,y,z: integer;
+    result:boolean;
+    begin
+      result:=true;
+      for x:=1 to 3 do
+        for y:=1 to 3 do
+          for z:=1 to 3 do
+            if (Fake[x,y,z].act) and
+                (GameBar[Fake[x,y,z].x,Fake[x,y,z].y,Fake[x,y,z].z]) then
+                  result:=False;
+       TestFake:=result end;
+procedure MoveObj(key:integer);
+  var
+    x,y,z:integer;
+    step:boolean;
+    begin
+      Fake2:=Fake;
+      step:=true;
+      case key of
+        UpKey: begin
+           for x:=1 to 3 do
+             for y:=1 to 3 do
+               for z:=1 to 3 do
+                 if Fake[x,y,z].act then
+                   if Fake[x,y,z].y-1=0 then
+                     step:=false;
+           if step then
+             for x:=1 to 3 do
+               for y:=1 to 3 do
+                 for z:=1 to 3 do
+                   Fake[x,y,z].y:=Fake[x,y,z].y-1;
+           If not TestFake then
+             Fake:=Fake2;
+           drStatickGame;
+           drFake end;
+        DownKey: begin
+          for x:=1 to 3 do
+             for y:=1 to 3 do
+               for z:=1 to 3 do
+                 if Fake[x,y,z].act then
+                   if Fake[x,y,z].y+1=6 then
+                     step:=false;
+           if step then
+             for x:=1 to 3 do
+               for y:=1 to 3 do
+                 for z:=1 to 3 do
+                   Fake[x,y,z].y:=Fake[x,y,z].y+1;
+           If not TestFake then
+             Fake:=Fake2;
+           drStatickGame;
+           drFake end;
+        LeftKey: begin
+          for x:=1 to 3 do
+             for y:=1 to 3 do
+               for z:=1 to 3 do
+                 if Fake[x,y,z].act then
+                   if Fake[x,y,z].x-1=0 then
+                     step:=false;
+           if step then
+             for x:=1 to 3 do
+               for y:=1 to 3 do
+                 for z:=1 to 3 do
+                   Fake[x,y,z].x:=Fake[x,y,z].x-1;
+           If not TestFake then
+             Fake:=Fake2;
+           drStatickGame;
+           drFake end;
+        RightKey: begin
+          for x:=1 to 3 do
+             for y:=1 to 3 do
+               for z:=1 to 3 do
+                 if Fake[x,y,z].act then
+                   if Fake[x,y,z].x+1=6 then
+                     step:=false;
+           if step then
+             for x:=1 to 3 do
+               for y:=1 to 3 do
+                 for z:=1 to 3 do
+                   Fake[x,y,z].x:=Fake[x,y,z].x+1;
+           If not TestFake then
+             Fake:=Fake2;
+           drStatickGame;
+           drFake end end end;
+procedure TestBreak;
+  var
+    x,y,z:integer;
+    result:boolean;
+  begin
+    for z:=10 downto 1 do  begin
+        result:=true;
+        for x:=1 to 5 do
+          for y:=1 to 5 do
+            If not GameBar[x,y,z] then
+              result:=false;
+        if result then begin
+          Score:=Score+100;
+          if score>=pizdec then ppp:=ppp*4;
+          for z:=z downto 2 do
+            for x:=1 to 5 do
+              for y:=1 to 5 do begin
+                GameBar[x,y,z]:=GameBar[x,y,z-1] end end;
+    end end;
+
+procedure Fall;
+  var
+    x,y,z:integer;
+    step:boolean;
+  begin
+    for x:=1 to 3 do
+      for y:=1 to 3 do
+        for z:=1 to 3 do
+          if Fake[x,y,z].act then begin
+            if Fake[x,y,z].z+1=11 then
+              step:=false;
+            if GameBar[Fake[x,y,z].x,Fake[x,y,z].y,Fake[x,y,z].z+1] then
+              step:=false end;
+    if not step then
+      for x:=1 to 3 do
+        for y:=1 to 3 do
+          for z:=1 to 3 do
+            if Fake[x,y,z].act then
+              GameBar[Fake[x,y,z].x,Fake[x,y,z].y,Fake[x,y,z].z]:=true;
+    if step then begin
+      for x:=1 to 3 do
+        for y:=1 to 3 do
+          for z:=1 to 3 do
+            Fake[x,y,z].z:=Fake[x,y,z].z+1 end
+     else begin
+       TestBreak;
+       InsertFake(3,3,1);
+       l:=100;
+       drFake end;
+    drStatickGame;
+    drFake end;
+Function TestPole:boolean;
+  var
+    x,y,z:integer;
+    result:boolean;
+    begin
+      result:=true;
+      for x:=1 to 3 do
+        for y:=1 to 3 do
+          for z:=1 to 3 do
+            with Fake[x,y,z] do
+              if (act) and ((x>5)or(x<1)or(z>10)or(y>5)or(y<1)) then
+                result:=false;
+      TestPole:=result  end;
+procedure Rotation (ocb:integer);
+  var
+    x,y,z:integer;
+    bottle:boolean;
+    begin
+    Fake2:=Fake;
+      case ocb of
+        1: begin
+          for z:=1 to 3 do begin
+            bottle:=Fake[2,1,z].act;
+            Fake[2,1,z].act:=Fake[1,2,z].act;
+            Fake[1,2,z].act:=Fake[2,3,z].act;
+            Fake[2,3,z].act:=Fake[3,2,z].act;
+            Fake[3,2,z].act:=bottle;
+            bottle:=Fake[1,1,z].act;
+            Fake[1,1,z].act:=Fake[1,3,z].act;
+            Fake[1,3,z].act:=Fake[3,3,z].act;
+            Fake[3,3,z].act:=Fake[3,1,z].act;
+            Fake[3,1,z].act:=Bottle end end;
+        2: begin
+          for z:=1 to 3 do begin
+            bottle:=Fake[2,1,z].act;
+            Fake[2,1,z].act:=Fake[3,2,z].act;
+            Fake[3,2,z].act:=Fake[2,3,z].act;
+            Fake[2,3,z].act:=Fake[1,2,z].act;
+            Fake[1,2,z].act:=bottle;
+            bottle:=Fake[1,1,z].act;
+            Fake[1,1,z].act:=Fake[3,1,z].act;
+            Fake[3,1,z].act:=Fake[3,3,z].act;
+            Fake[3,3,z].act:=Fake[1,3,z].act;
+            Fake[1,3,z].act:=Bottle end end;
+        3: begin
+          for x:=1 to 3 do begin
+            bottle:=Fake[x,1,2].act;
+            Fake[x,1,2].act:=Fake[x,2,3].act;
+            Fake[x,2,3].act:=Fake[x,3,2].act;
+            Fake[x,3,2].act:=Fake[x,2,1].act;
+            Fake[x,2,1].act:=bottle;
+            bottle:=Fake[x,1,1].act;
+            Fake[x,1,1].act:=Fake[x,1,3].act;
+            Fake[x,1,3].act:=Fake[x,3,3].act;
+            Fake[x,3,3].act:=Fake[x,3,1].act;
+            Fake[x,3,1].act:=Bottle end end;
+        4: begin
+          for x:=1 to 3 do begin
+            bottle:=Fake[x,1,2].act;
+            Fake[x,1,2].act:=Fake[x,2,1].act;
+            Fake[x,2,1].act:=Fake[x,3,2].act;
+            Fake[x,3,2].act:=Fake[x,2,3].act;
+            Fake[x,2,3].act:=bottle;
+            bottle:=Fake[x,1,1].act;
+            Fake[x,1,1].act:=Fake[x,3,1].act;
+            Fake[x,3,1].act:=Fake[x,3,3].act;
+            Fake[x,3,3].act:=Fake[x,1,3].act;
+            Fake[x,1,3].act:=Bottle end end;
+        5: begin
+          for y:=1 to 3 do begin
+            bottle:=Fake[1,y,2].act;
+            Fake[1,y,2].act:=Fake[2,y,1].act;
+            Fake[2,y,1].act:=Fake[3,y,2].act;
+            Fake[3,y,2].act:=Fake[2,y,3].act;
+            Fake[2,y,3].act:=bottle;
+            bottle:=Fake[1,y,1].act;
+            Fake[1,y,1].act:=Fake[3,y,1].act;
+            Fake[3,y,1].act:=Fake[3,y,3].act;
+            Fake[3,y,3].act:=Fake[1,y,3].act;
+            Fake[1,y,3].act:=Bottle end end;
+        6: begin
+          for y:=1 to 3 do begin
+            bottle:=Fake[1,y,2].act;
+            Fake[1,y,2].act:=Fake[2,y,3].act;
+            Fake[2,y,3].act:=Fake[3,y,2].act;
+            Fake[3,y,2].act:=Fake[2,y,1].act;
+            Fake[2,y,1].act:=bottle;
+            bottle:=Fake[1,y,1].act;
+            Fake[1,y,1].act:=Fake[1,y,3].act;
+            Fake[1,y,3].act:=Fake[3,y,3].act;
+            Fake[3,y,3].act:=Fake[3,y,1].act;
+            Fake[3,y,1].act:=Bottle end end;
+         end;
+    If (not TestFake) or (not TestPole)then
+      Fake:=Fake2;
+    drStatickGame;
+    drFake end;
+begin
+  ppp:=MaxFigure;
+  Randomize;
+  grD:=Detect;
+  InitDriver;
+  InitGraph(grD,grM,'');
+  ShowMouse;
+  drStatickGame;
+  InsertArr;
+  InsertFake(3,3,1);
+  drFake;
+  iii:=0;
+  l:=100;
+  Score:=0;
+  repeat
+    GetNextEvent(Event);
+    with Event do with Where do begin
+      case What of
+        evKeyDown: begin
+          case KeyCode of
+            kbEsc: ExitOk:=TRUE;
+            kbUp: MoveObj(UpKey);
+            kbDown:MoveObj(DownKey);
+            kbLeft:MoveObj(LeftKey);
+            kbRight:MoveObj(RightKey) end;
+          case Symbol of
+            'a':Rotation(1);
+            'q':Rotation(2);
+            's':Rotation(4);
+            'w':Rotation(3);
+            'd':Rotation(5);
+            'e':Rotation(6);
+            ' ':l:=1;
+             end end;
+        evMouseMove: begin
+          Xmouse:=X;
+          Ymouse:=Y end;
+        evNothing: begin
+         inc(iii);
+         Delay(l);
+         if iii>1000 then begin
+           iii:=0;
+           Fall end end end end;
+  until ExitOk;
+  DoneDriver;
+  CloseGraph
+end.
